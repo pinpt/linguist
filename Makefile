@@ -14,9 +14,8 @@ BASEDIR := $(shell echo $${PWD})
 BUILD := $(shell git rev-parse HEAD | cut -c1-8)
 COMMITSHA := $(shell git rev-parse HEAD)
 SRC := $(shell find . -type f -name '*.go' -not -path './vendor/*' -not -path './.git/*' -not -path './hack/*')
-# VERSION := $(shell cat $(BASEDIR)/VERSION)
+VERSION := $(shell cat $(BASEDIR)/VERSION)
 
-L="-X=github.com/$(PKG)/cmd/main.Build=$(BUILD) -X=github.com/$(PKG)/cmd/main.Version=$(VERSION)"
 
 all: build
 
