@@ -1,7 +1,6 @@
 # Linguist
 
 This repository provides a basic web server wrapper around the [Github Linguist](https://github.com/github/linguist) tool.
-Simple container to run github linguist.
 
 ## Building
 
@@ -39,4 +38,5 @@ You can change the TLS certificates by mounting the file at `/app/server.crt` an
 
 ## License
 
-Copyright (c) 2017 by PinPT, Inc. All Rights Reserved.
+Copyright (c) 2017 by PinPT, Inc. All Rights Reserved. Licensed under the MIT license.
+
