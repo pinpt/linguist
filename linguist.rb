@@ -4,7 +4,7 @@ require 'json'
 require 'linguist'
 
 environment 'production'
-#quiet
+quiet
 bind 'ssl://0.0.0.0:25032?key=/app/server.key&cert=/app/server.crt&verify_mode=none'
 
 class MemoryBlob
@@ -99,7 +99,7 @@ end
 #
 def checkheader (env, auth)
 	value = env['HTTP_AUTHORIZATION']
-   return value == auth
+	return value == auth
 end
 
 auth = ENV['PP_LINGUIST_AUTH'] || '1234'
@@ -125,10 +125,7 @@ app do |env|
       end
    when /languages/
       if checkheader(env, auth) == false
-         body = {
-            :success => false,
-            :message => 'unauthorized'
-         }.to_json
+         body = { :success => false, :message => 'unauthorized' }.to_json
          [401, { 'Content-Type' => 'application/json' }, [body]]
 		else
 			results = {}
