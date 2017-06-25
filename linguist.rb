@@ -1,12 +1,11 @@
-#!/usr/bin/env ruby
-#
-# A simple Webserver that can be run to process requests
-# for the Linguist library.
-#
+#!/usr/bin/env puma
+
 require 'json'
-require 'webrick'
-require 'webrick/https'
 require 'linguist'
+
+environment 'production'
+#quiet
+bind 'ssl://0.0.0.0:25032?key=/app/server.key&cert=/app/server.crt&verify_mode=none'
 
 class MemoryBlob
 	include Linguist::BlobHelper
@@ -98,118 +97,50 @@ end
 #
 # check our request header for the appropriate auth token
 #
-def checkheader (req, auth)
-	value = req.header["authorization"]
-	if value && value[0] == auth
-		return true
-	end
-	return false
+def checkheader (env, auth)
+	value = env['HTTP_AUTHORIZATION']
+   return value == auth
 end
 
-#
-# run the main webserver
-#
-def main (auth = '1234', port = 25032)
-	puts "Auth token is #{auth}"
-	puts "Listening on port #{port}"
-	STDOUT.flush
+auth = ENV['PP_LINGUIST_AUTH'] || '1234'
 
-	cert_name = [
-		%w[CN localhost],
-		%w[CN linguist],
-	]
-
-	devnull = WEBrick::Log::new("/dev/null", 7)
-
-	access_log = [
-		[$stdout, WEBrick::AccessLog::COMMON_LOG_FORMAT],
-	]
-
-	#
-	# create a server
-	#
-	server = WEBrick::HTTPServer.new(
-		:BindAddress => '0.0.0.0',
-		:SSLEnable => true,
-		:SSLCertName => cert_name,
-		:Port => port,
-		:DoNotReverseLookup => true,
-		:Logger => devnull,
-		:AccessLog => access_log)
-
-	#
-	# handle detection of one or more files
-	#
-	server.mount_proc '/check-status' do |req, res|
-		res.content_type = 'text/plain'
-		res.status = 200
-		res.body = 'OK'
-	end
-
-	#
-	# handle detection of one or more files
-	#
-	server.mount_proc '/detect' do |req, res|
-		res.content_type = 'application/json'
-		if checkheader(req, auth) == false
-			res.status = 401
-			res.body = {
-				:success => false,
-				:message => 'unauthorized'
-			}.to_json
-		else
-			if req.request_method == 'POST'
-				begin
-					res.body = {
-						:success => true,
-						:results => JSON.parse(req.body).collect { |entry| process(entry) }
-					}.to_json
-				rescue => e
-					puts e.backtrace
-					res.status = 500
-					res.body = {
-						:success => false,
-						:message => e
-					}.to_json
-				end
-			else
-				res.status = 400
-				res.body = {
-					:success => false,
-					:message => 'invalid request'
-				}.to_json
-			end
-		end
-	end
-
-	#
-	# handle returning all the currently known languages we support
-	#
-	server.mount_proc '/languages' do |req, res|
-		res.content_type = 'application/json'
-		if checkheader(req, auth) == false
-			res.status = 401
-			res.body = {
-				:success => false,
-				:message => 'unauthorized'
-			}.to_json
+app do |env|
+   case env['REQUEST_PATH']
+   when /check-status/
+      [200, { 'Content-Type' => 'text/plain' }, ['OK']]
+   when /detect/
+      begin
+         if checkheader(env, auth) == false
+            body = { :success => false, :message => 'unauthorized' }.to_json
+            [401, { 'Content-Type' => 'application/json' }, [body]]
+         else
+            msg = JSON.parse env['rack.input'].read
+            body = { :success => true, :results => msg.collect { |entry| process(entry) } }.to_json
+            [200, { 'Content-Type' => 'application/json' }, [body]]
+         end
+      rescue => e
+         puts e.backtrace
+         body = { :success => false, :message => e }.to_json
+         [500, { 'Content-Type' => 'application/json' }, [body]]
+      end
+   when /languages/
+      if checkheader(env, auth) == false
+         body = {
+            :success => false,
+            :message => 'unauthorized'
+         }.to_json
+         [401, { 'Content-Type' => 'application/json' }, [body]]
 		else
 			results = {}
 			results = Linguist::Language.all.map do |lang|
 				results[lang.name] = languageToJSON(lang)
 			end
-			res.body = {
-				:success => true,
-				:results => results
-			}.to_json
+			body = { :success => true, :results => results }.to_json
+         [200, { 'Content-Type' => 'application/json' }, [body]]
 		end
-	end
-
-	# start the server and handle graceful shutdown requests
-	trap 'INT' do server.shutdown end
-	server.start
-
-	server
+   else
+      [404, { 'Content-Type' => 'text/plain' }, ['Not Found']]
+   end
 end
 
-main(ARGV[0] || ENV['PP_LINGUIST_AUTH'] || '1234', ARGV[1] || ENV['PP_LINGUIST_PORT'] || 25032)
+puts "Linguist is running version #{ENV['LINGUIST_VERSION']}"
