@@ -28,6 +28,8 @@ build: dev
 release-dev: dev
 	docker push $(DOCKERPKG)
 
-release:
-	DOCKERTAG=$(VERSION) make docker
+push:
 	docker push $(DOCKERPKG)
+
+release:
+	DOCKERTAG=$(VERSION) make docker push
