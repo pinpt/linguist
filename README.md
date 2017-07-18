@@ -16,7 +16,7 @@ Make sure you edit the `VERSION` file with the new version and then:
 
 `make release`
 
-## Running
+## Running in Docker
 
 Assuming you're running in Docker:
 
@@ -42,7 +42,7 @@ To run using native linux (non-docker):
 
 - `sudo apt-get install -y curl ca-certificates cmake libicu-dev ruby ruby-dev zlib1g-dev libssl-dev`
 - `gem install github-linguist:5.0.11 json:2.1.0 puma:3.9.1 --no-document`
-- copy the `server.key`, `server.crt` and `linguist.rb` into a directory named `/app`
+- `git clone https://github.com/pinpt/linguist /app`
 - run `puma -C /app/linguist.rb`
 
 ## License
