@@ -41,7 +41,7 @@ You can change the TLS certificates by mounting the file at `/app/server.crt` an
 To run using native linux (non-docker):
 
 - `sudo apt-get install -y curl ca-certificates cmake libicu-dev ruby ruby-dev zlib1g-dev libssl-dev`
-- `gem install github-linguist:5.0.11 json:2.1.0 puma:3.9.1 --no-document`
+- `sudo gem install github-linguist:5.0.11 json:2.1.0 puma:3.9.1 --no-document`
 - `git clone https://github.com/pinpt/linguist /app`
 - run `puma -C /app/linguist.rb`
 
