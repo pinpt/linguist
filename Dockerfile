@@ -1,8 +1,8 @@
-FROM ruby:2.4.1-alpine
+FROM ruby:2.5.0-alpine
 
-ENV LINGUIST_VERSION 5.0.11
-ENV PUMA_VERSION 3.9.1
-ENV JSON_VERSION 2.1.0
+ENV LINGUIST_VERSION=6.0.1
+ENV PUMA_VERSION=3.9.1
+ENV JSON_VERSION=2.1.0
 
 RUN apk --update upgrade && \
 	apk add \
@@ -32,10 +32,12 @@ ARG NAME
 ARG COMMITSHA
 ARG REPO_ID
 
-ENV VERSION ${VERSION}
-ENV BUILD ${BUILD}
+ENV VERSION=${VERSION}
+ENV BUILD=${BUILD}
 
-LABEL "io.pinpt.build.commit=${COMMITSHA}"  "io.pinpt.build.version=${VERSION}"  "io.pinpt.build.repo.id=${REPO_ID}"
+LABEL io.pinpt.build.commit=${COMMITSHA}
+LABEL io.pinpt.build.version=${VERSION}
+LABEL io.pinpt.build.repo.id=${REPO_ID}
 
 COPY linguist.rb /app
 COPY server.crt /app
